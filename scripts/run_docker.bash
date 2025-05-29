@@ -1,0 +1,1 @@
+ docker run -d -p 8888:8888 -e DOPPLER_TOKEN=dp.st.******i --restart always --name name_container  miguelsanz72/name_image:latest

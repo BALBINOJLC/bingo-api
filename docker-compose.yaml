@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - ./.env
+        # Si necesitas ejecutar el servicio con Doppler, asegúrate de que Doppler esté correctamente configurado.
+        command: doppler run -- node dist/src/main.js
+        volumes:
+            - /usr/src/app
+            - /usr/src/app/node_modules
+            - ./firebase-admin.json:/usr/src/app/firebase-admin.json
+
+        ports:
+            - '8081:8081' # Asegúrate de que el puerto del contenedor sea 3000 como se define en tu Dockerfile

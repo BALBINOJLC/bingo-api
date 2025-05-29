@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "sourceMap": true,
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "ES2021",
+        "outDir": "./dist",
+        "baseUrl": "./",
+        "incremental": true,
+        "lib": ["ES2020.Promise"],
+        "skipLibCheck": true,
+        "allowJs": true,
+        "paths": {
+            "@prisma": ["prisma/index"],
+            "@common": ["src/common/index"],
+            "@helpers": ["src/common/helpers/index"],
+            "@casl": ["src/casl/index"],
+            "@health": ["src/health/index"],
+            "@users": ["src/v1/users/index"],
+            "@auth": ["src/v1/auth/index"],
+            "@email": ["src/v1/email/index"]
+        }
+    }
+}

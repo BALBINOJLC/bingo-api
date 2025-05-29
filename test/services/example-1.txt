@@ -1,0 +1,347 @@
+
+import { Test, TestingModule } from '@nestjs/testing';
+import { getModelToken } from 'nestjs-typegoose';
+import { getModelForClass, mongoose } from '@typegoose/typegoose';
+import { AccessControlService, ACL_OPTIONS } from '@timejobs/shared-libray';
+
+import { ItemsService } from './items.service';
+import { ItemsController } from './items.controller';
+import { Item } from './items.model';
+import { AccessControlConfig } from '../config/acl/acl.config';
+
+describe('ItemsService', () => {
+  let itemsService: ItemsService;
+
+  const ItemModel = getModelForClass(Item, {
+    schemaOptions: {
+      collection: item-${Math.random().toString(36).substring(7)},
+    },
+  });
+
+  beforeEach(async () => {
+    await mongoose.connect(process.env.MONGO_URL, {
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+    });
+
+    const itemsModule: TestingModule = await Test.createTestingModule({
+      controllers: [ItemsController],
+      providers: [
+        ItemsService,
+        {
+          provide: getModelToken('Item'),
+          useValue: ItemModel,
+        },
+        {
+          provide: ACL_OPTIONS,
+          useValue: AccessControlConfig,
+        },
+        AccessControlService,
+      ],
+    }).compile();
+
+    itemsService = itemsModule.get<ItemsService>(ItemsService);
+    await ItemModel.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+  });
+
+  it('should be defined', () => {
+    expect(itemsService).toBeDefined();
+  });
+
+  describe('function create', () => {
+    it('return new object', async () => {
+      const item = {
+        name: 'example',
+        stock: 1,
+        tags: ['red'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+
+      expect.assertions(3);
+
+      const response = await itemsService.create(item);
+
+      expect(response.name).toEqual('example');
+      expect(response.stock).toEqual(1);
+      expect(Array.from(response.tags)).toEqual(['red']);
+    });
+  });
+
+  describe('function findAll', () => {
+    beforeEach(async () => {
+      const itemOne = {
+        name: 'example',
+        stock: 1,
+        tags: ['red'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+      await ItemModel.create(itemOne);
+
+      const itemTwo = {
+        name: 'example',
+        stock: 0,
+        tags: ['red', 'blue'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+      await ItemModel.create(itemTwo);
+
+      const itemThree = {
+        name: 'otherName',
+        stock: 0,
+        tags: ['blue'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+      await ItemModel.create(itemThree);
+    });
+
+    it('find all objects', async () => {
+      const stock = null;
+      const tags = null;
+      const name = null;
+      const next = null;
+      const previous = null;
+      const limit = null;
+      const sortField = null;
+      const sortAscending = null;
+
+      expect.assertions(1);
+
+      const response = await itemsService.findAll({
+        stock,
+        tags,
+        name,
+        next,
+        previous,
+        limit,
+        sortField,
+        sortAscending,
+      });
+      expect(response.totalDocs).toEqual(3);
+    });
+
+    it('find all objects with all filters', async () => {
+      const stock = '1';
+      const tags = ['red'];
+      const name = 'example';
+      const next = null;
+      const previous = null;
+      const limit = null;
+      const sortField = null;
+      const sortAscending = null;
+
+      expect.assertions(1);
+
+      const response = await itemsService.findAll({
+        stock,
+        tags,
+        name,
+        next,
+        previous,
+        limit,
+        sortField,
+        sortAscending,
+      });
+      expect(response.totalDocs).toEqual(1);
+    });
+
+    it('find all objects with one filter', async () => {
+      const stock = '0';
+      const tags = null;
+      const name = null;
+      const next = null;
+      const previous = null;
+      const limit = null;
+      const sortField = null;
+      const sortAscending = null;
+
+      expect.assertions(1);
+
+
+const response = await itemsService.findAll({
+        stock,
+        tags,
+        name,
+        next,
+        previous,
+        limit,
+        sortField,
+        sortAscending,
+      });
+      expect(response.totalDocs).toEqual(2);
+    });
+
+    it('find all objects with one filters in array', async () => {
+      const stock = null;
+      const tags = ['blue', 'red'];
+      const name = null;
+      const next = null;
+      const previous = null;
+      const limit = null;
+      const sortField = null;
+      const sortAscending = null;
+
+      expect.assertions(1);
+
+      const response = await itemsService.findAll({
+        stock,
+        tags,
+        name,
+        next,
+        previous,
+        limit,
+        sortField,
+        sortAscending,
+      });
+      expect(response.totalDocs).toEqual(1);
+    });
+  });
+
+  describe('function findOne', () => {
+    it('find one object', async () => {
+      const item = {
+        name: 'example',
+        stock: 1,
+        tags: ['red'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+
+      expect.assertions(3);
+
+      const responseCreate = await ItemModel.create(item);
+      const response = await itemsService.findOne(responseCreate._id);
+      expect(response.name).toEqual('example');
+      expect(response.stock).toEqual(1);
+      expect(Array.from(response.tags)).toEqual(['red']);
+    });
+
+    it('find an object that doesnt exist', async () => {
+      const id = '5ff61d13c2feaf104339939c';
+
+      expect.assertions(2);
+
+      try {
+        await itemsService.findOne(id);
+      } catch (error) {
+        expect(error.status).toEqual(404);
+        expect(error.message).toEqual('No docs found!');
+      }
+    });
+  });
+
+  describe('function delete', () => {
+    it('delete object', async () => {
+      const item = {
+        name: 'example',
+        stock: 1,
+        tags: ['red'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+
+      const user = {
+        id: '5fff4b5d3d3bfee7bc02739f',
+        roles: ['admin'],
+        country: 'CL',
+        email: 'test@test.com',
+        names: 'names',
+        surnames: 'surnames',
+      };
+
+      expect.assertions(1);
+
+      const responseCreate = await ItemModel.create(item);
+      const response = await itemsService.delete(responseCreate._id, user.id);
+      expect(response).toBeTruthy();
+    });
+
+    it('delete object that doesnt exist', async () => {
+      const id = '5ff61d13c2feaf104339939c';
+
+      const user = {
+        id: '5fff4b5d3d3bfee7bc02739f',
+        roles: ['admin'],
+        country: 'CL',
+        email: 'test@test.com',
+        names: 'names',
+        surnames: 'surnames',
+      };
+
+      expect.assertions(2);
+
+      try {
+        await itemsService.delete(id, user.id);
+      } catch (error) {
+        expect(error.status).toEqual(404);
+        expect(error.message).toEqual('No docs found!');
+      }
+    });
+  });
+
+  describe('function update', () => {
+    it('update object', async () => {
+      const item = {
+        name: 'example',
+        stock: 1,
+        tags: ['red'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+
+      expect.assertions(3);
+
+      const responseCreate = await ItemModel.create(item);
+      const itemUpdate = {
+        name: 'exampleUpdate',
+        stock: 2,
+        tags: ['black', 'blue'],
+      };
+      const response = await itemsService.update(
+        responseCreate._id,
+        itemUpdate,
+      );
+      expect(response.name).toEqual('exampleUpdate');
+      expect(response.stock).toEqual(2);
+      expect(Array.from(response.tags)).toEqual(['black', 'blue']);
+    });
+
+    it('update object that doesnt exist', async () => {
+      const id = '5ff61d13c2feaf104339939c';
+      const itemUpdate = {
+        name: 'exampleUpdate',
+        stock: 2,
+        tags: ['black', 'blue'],
+      };
+
+      expect.assertions(2);
+
+      try {
+        await itemsService.update(id, itemUpdate);
+      } catch (error) {
+        expect(error.status).toEqual(404);
+        expect(error.message).toEqual('No docs found!');
+      }
+    });
+  });
+
+
+describe('function count', () => {
+    it('count objects', async () => {
+      const item = {
+        name: 'example',
+        stock: 1,
+        tags: ['red'],
+        creator: '5fff4b5d3d3bfee7bc02739f',
+      };
+
+      expect.assertions(1);
+
+      await itemsService.create(item);
+      const response = await itemsService.count();
+      expect(response).toEqual(1);
+    });
+  });
+});

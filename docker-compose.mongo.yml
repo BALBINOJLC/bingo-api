@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  db-mongo:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_DATABASE: exampledb
+    ports:
+      - "27017:27017"

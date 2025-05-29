@@ -1,0 +1,8 @@
+#!/bin/sh
+npm run test ||
+    (
+        echo '❌👷🔨❌ Better call Bob... Because your need help to resolve the tests ❌👷🔨❌'
+        false
+    )
+
+echo '✅✅✅ You win this time... I am pushing this now. ✅✅✅✅'

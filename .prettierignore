@@ -1,0 +1,4 @@
+# Ignore artifacts:
+start
+*enum.ts
+src/models/*
