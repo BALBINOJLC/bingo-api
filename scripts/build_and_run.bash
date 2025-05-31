@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#bash ./build_and_run.bash ./Dockerfile api
+#bash ./scripts/build_and_run.bash ./Dockerfile api
 
 # Variables
 DOCKER_USERNAME="balbinojose"
