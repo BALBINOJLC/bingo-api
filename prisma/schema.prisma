@@ -30,6 +30,29 @@ enum EUserStatus {
   REJECTED
 }
 
+// Nuevos enums para el bingo
+enum EBingoStatus {
+  INACTIVE
+  IN_PROGRESS
+  ACTIVE
+}
+
+enum ETicketStatus {
+  PROCESSING_SOLD
+  AVAILABLE
+  SOLD
+  USED
+  CANCELLED
+}
+
+enum ECartonStatus {
+  PROCESSING_SOLD
+  AVAILABLE
+  SOLD
+  USED
+  CANCELLED
+}
+
 model Base {
   id          String    @id @default(uuid()) @map("_id")
   name        String
@@ -54,30 +77,20 @@ model User {
   phone_area   String?
   address      String?
   user_name    String        @unique
-  Profiles     UserProfile[]
+  role         EUserRole     @default(CLIENT)
   created_at   DateTime      @default(now())
   deleted_at   DateTime?
   is_deleted   Boolean       @default(false)
   updated_at   DateTime      @updatedAt
   Avatar       Avatar?
   is_new       Boolean       @default(true)
+  Tickets      Ticket[]
+
 
   @@map("users")
 }
 
-model UserProfile {
-  id         String    @id @default(uuid()) @map("_id")
-  role       EUserRole
-  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  active     Boolean   @default(false)
-  user_id    String
-  created_at DateTime  @default(now())
-  deleted_at DateTime?
-  is_deleted Boolean   @default(false)
-  updated_at DateTime  @updatedAt
 
-  @@map("user_profiles")
-}
 
 model File {
   id         String    @id @default(uuid()) @map("_id")
@@ -113,4 +126,62 @@ model Avatar {
   user_id String @unique
 
   @@id([file_id, user_id])
+}
+
+// Modelos para el bingo
+model BingoEvent {
+  id          String       @id @default(uuid()) @map("_id")
+  name        String
+  description String
+  start_date  String
+  end_date    String
+  time_start  String
+  time_end    String
+  status      EBingoStatus
+  prize_pool  Float        @default(0)
+  commission  Float        @default(0)
+  cartons     Carton[] // Relación con los cartones
+  tickets     Ticket[] // Relación con los tickets vendidos
+  numbers     Int[]
+  created_at  DateTime     @default(now())
+  deleted_at  DateTime?
+  is_deleted  Boolean      @default(false)
+  updated_at  DateTime     @updatedAt
+
+  @@map("bingo_events")
+}
+
+model Carton {
+  id       Int           @id @default(autoincrement()) @map("_id")
+  status   ECartonStatus
+  event    BingoEvent    @relation(fields: [event_id], references: [id])
+  event_id String
+  numbers  Int[]
+  Ticket   Ticket?
+  ticketId String?
+
+  @@map("cartons")
+}
+
+model Ticket {
+  id        String        @id @default(uuid()) @map("_id")
+  status    ETicketStatus
+  price     Float
+  user      User          @relation(fields: [user_id], references: [id])
+  user_id   String
+  event     BingoEvent    @relation(fields: [event_id], references: [id])
+  event_id  String
+  carton    Carton?       @relation(fields: [carton_id], references: [id])
+  carton_id Int?          @unique
+
+  reference_payment String?
+  number_payment    String?
+  amount_payment    Float?
+
+  created_at DateTime  @default(now())
+  deleted_at DateTime?
+  is_deleted Boolean   @default(false)
+  updated_at DateTime  @updatedAt
+
+  @@map("tickets")
 }

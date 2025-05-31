@@ -21,7 +21,7 @@ export class RolesGuard implements CanActivate {
         }
 
         // Verificar si al menos un perfil del usuario tiene uno de los roles permitidos
-        const hasRole = user.Profiles.some((profile) => roles.includes(profile.role) && profile.active && !profile.is_deleted);
+        const hasRole = roles.includes(user.role);
 
         if (!hasRole) {
             throw new UnauthorizedException('AUTH.ERRORS.USER.NOT_AUTHORIZED');

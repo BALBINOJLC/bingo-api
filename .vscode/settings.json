@@ -6,5 +6,8 @@
         "angular-component": {
             "ngOnInit": true
         }
-    }
+    },
+    "cSpell.words": [
+        "autoincrement"
+    ]
 }

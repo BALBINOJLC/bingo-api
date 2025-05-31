@@ -78,12 +78,7 @@ export class AuthService {
                         first_name,
                         last_name,
                         dni: registerUserDto.dni.replace(/[^\w\s]/gi, ''),
-                        Profiles: {
-                            create: {
-                                role: registerUserDto.role ?? EUserRole.CLIENT,
-                                active: true,
-                            },
-                        },
+                        role: registerUserDto.role ?? EUserRole.CLIENT,
                         Avatar: {
                             create: {
                                 file_id: newFile.id,

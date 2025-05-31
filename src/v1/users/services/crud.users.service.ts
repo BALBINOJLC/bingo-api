@@ -153,13 +153,6 @@ export class UserService {
             const user = await this.prismaService.user.findUnique({
                 where: query,
                 include: {
-                    Profiles: {
-                        select: {
-                            id: true,
-                            role: true,
-                            active: true,
-                        },
-                    },
                     Avatar: true,
                 },
             });
@@ -187,16 +180,7 @@ export class UserService {
                 where: {
                     id: id,
                 },
-                include: {
-                    Profiles: {
-                        select: {
-                            id: true,
-                            role: true,
-                            active: true,
-                        },
-                    },
-                    Avatar: true,
-                },
+                include: { Avatar: true },
                 data: dataUpdate,
             });
 

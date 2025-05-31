@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "ECartonStatus" ADD VALUE 'PROCESSING_SOLD';

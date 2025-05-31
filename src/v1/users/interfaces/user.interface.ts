@@ -14,7 +14,6 @@ export interface IUserInvited {
 
 export interface IUser extends User {
     password: string;
-    Profiles: IUserProfile[];
 }
 
 export interface IRespFindAllUsers extends ResponseList {

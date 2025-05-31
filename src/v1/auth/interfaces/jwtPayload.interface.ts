@@ -1,3 +1,4 @@
+import { EUserRole } from '@prisma/client';
 import { IUserProfile } from '@users';
 
 export interface IJwtPayload {
@@ -5,5 +6,5 @@ export interface IJwtPayload {
     email: string;
     display_name: string;
     user_name: string;
-    Profiles: IUserProfile[];
+    role: EUserRole;
 }

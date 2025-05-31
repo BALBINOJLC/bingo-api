@@ -5,6 +5,7 @@ import { envs } from 'src/config/envs';
 import { Response } from 'express';
 import { JwtAuthGuard, IRequestWithUser, RequestHandlerUtil, CustomError } from '@common';
 import { PasswordForgotDto, RegisterUserDto, ResetPasswordDto } from '../dtos';
+import { EUserRole } from '@prisma/client';
 
 @ApiTags('AUTH')
 @Controller({
@@ -78,7 +79,7 @@ export class AuthController {
         const { email, password } = body;
         try {
             const { user } = req;
-            if (user.Profiles.findIndex((profile) => profile.role === 'OWNER') === -1) {
+            if (user.role !== EUserRole.OWNER) {
                 throw new CustomError({
                     statusCode: HttpStatus.UNAUTHORIZED,
                     message: 'AUTH.UNAUTHORIZED',
