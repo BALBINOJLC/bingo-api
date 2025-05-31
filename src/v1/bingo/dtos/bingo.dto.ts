@@ -72,9 +72,8 @@ export class PurchaseTicketDto {
     @IsNumber()
     carton_id: number;
 
-    @IsNumber()
-    @Min(0)
-    amount_payment: number;
+    @IsString()
+    amount_payment: string;
 
     @IsString()
     reference_payment: string;

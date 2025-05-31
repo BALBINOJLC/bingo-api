@@ -64,33 +64,31 @@ model Base {
 }
 
 model User {
-  id           String        @id @default(uuid()) @map("_id")
+  id           String     @id @default(uuid()) @map("_id")
   display_name String
-  email        String        @unique
-  dni          String        @unique
-  email_verify Boolean       @default(false)
+  email        String     @unique
+  dni          String     @unique
+  email_verify Boolean    @default(false)
   first_name   String
-  is_active    Boolean       @default(false)
+  is_active    Boolean    @default(false)
   last_name    String
   password     String
   phone        String?
   phone_area   String?
   address      String?
-  user_name    String        @unique
-  role         EUserRole     @default(CLIENT)
-  created_at   DateTime      @default(now())
+  user_name    String     @unique
+  role         EUserRole  @default(CLIENT)
+  created_at   DateTime   @default(now())
   deleted_at   DateTime?
-  is_deleted   Boolean       @default(false)
-  updated_at   DateTime      @updatedAt
+  is_deleted   Boolean    @default(false)
+  updated_at   DateTime   @updatedAt
   Avatar       Avatar?
-  is_new       Boolean       @default(true)
+  is_new       Boolean    @default(true)
   Tickets      Ticket[]
-
+  payments     payments[]
 
   @@map("users")
 }
-
-
 
 model File {
   id         String    @id @default(uuid()) @map("_id")
@@ -166,7 +164,6 @@ model Carton {
 model Ticket {
   id        String        @id @default(uuid()) @map("_id")
   status    ETicketStatus
-  price     Float
   user      User          @relation(fields: [user_id], references: [id])
   user_id   String
   event     BingoEvent    @relation(fields: [event_id], references: [id])
@@ -176,7 +173,9 @@ model Ticket {
 
   reference_payment String?
   number_payment    String?
-  amount_payment    Float?
+  amount_payment    String?
+
+  error_logs Json?
 
   created_at DateTime  @default(now())
   deleted_at DateTime?
@@ -184,4 +183,18 @@ model Ticket {
   updated_at DateTime  @updatedAt
 
   @@map("tickets")
+}
+
+model payments {
+  id                   String    @id @default(uuid()) @map("_id")
+  reference_payment    String
+  number_payment       String
+  amount_payment       String
+  validations_response Json
+  user                 User      @relation(fields: [user_id], references: [id])
+  user_id              String
+  created_at           DateTime  @default(now())
+  deleted_at           DateTime?
+  is_deleted           Boolean   @default(false)
+  updated_at           DateTime  @updatedAt
 }

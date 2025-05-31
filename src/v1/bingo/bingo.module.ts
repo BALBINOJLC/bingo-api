@@ -3,11 +3,12 @@ import { BingoService } from './services/bingo.service';
 import { PrismaModule } from '@prisma';
 import { BingoController } from './controllers/bingo.controller';
 import { AuthModule } from '@auth';
-import { ScheduleModule } from '@nestjs/schedule';
+import { InvoiceGeneratorCron } from './cron/valid.payment.cron';
+
 
 @Module({
-    imports: [PrismaModule, AuthModule, ScheduleModule.forRoot()],
+    imports: [PrismaModule, AuthModule],
     controllers: [BingoController],
-    providers: [BingoService],
+    providers: [BingoService, InvoiceGeneratorCron],
 })
 export class BingoModule {} 

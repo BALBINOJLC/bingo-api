@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '@prisma';
 import { CreateBingoEventDto, BingoEventQueryDto, PurchaseTicketDto, UpdateBingoEventStatusDto } from '../dtos/bingo.dto';
 import { EBingoStatus, ECartonStatus, ETicketStatus, Prisma } from '@prisma/client';
+import axios from 'axios';
+import { getAllJSDocTagsOfKind } from 'typescript';
 
 @Injectable()
 export class BingoService {
@@ -172,7 +174,6 @@ export class BingoService {
             const ticket = await prisma.ticket.create({
                 data: {
                     status: ETicketStatus.PROCESSING_SOLD,
-                    price: amount_payment,
                     user: { connect: { id: user_id } },
                     carton: { connect: { id: carton_id } },
                     event: { connect: { id: carton.event_id } },
@@ -230,5 +231,56 @@ export class BingoService {
                 status: updateStatusDto.status,
             },
         });
+    }
+
+    async validateTicketsPayments() {
+        const tickets = await this.prisma.ticket.findMany({
+            where: {
+                status: ETicketStatus.PROCESSING_SOLD,
+            },
+        });
+
+        for (const ticket of tickets) {
+            try {
+                const response = await axios.get(
+                    `https://flows.sicrux.app/webhook/c89345a3-89a1-4668-8563-f3399002a96d/validationsPayments/${ticket.amount_payment}/${ticket.reference_payment}/${ticket.number_payment}`
+                );
+
+                if (response.data.success) {
+                    // Actualizar el ticket a SOLD
+                    await this.prisma.ticket.update({
+                        where: { id: ticket.id },
+                        data: { status: ETicketStatus.SOLD },
+                    });
+
+                    // Actualizar el cartón a SOLD
+                    await this.prisma.carton.update({
+                        where: { id: ticket.carton_id },
+                        data: { status: ECartonStatus.SOLD },
+                    });
+
+                    await this.prisma.payments.create({
+                        data: {
+                            reference_payment: ticket.reference_payment,
+                            number_payment: ticket.number_payment,
+                            amount_payment: ticket.amount_payment,
+                            validations_response: response.data,
+                            user: { connect: { id: ticket.user_id } },
+                            created_at: new Date(),
+                            updated_at: new Date(),
+                            deleted_at: null,
+                            is_deleted: false,
+                        },
+                    });
+                } 
+            } catch (error) {
+                await this.prisma.ticket.update({
+                    where: { id: ticket.id },
+                    data: { error_logs: error },
+                });
+            }
+        }
+
+        return tickets;
     }
 }

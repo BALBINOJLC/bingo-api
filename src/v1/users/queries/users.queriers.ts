@@ -16,7 +16,7 @@ const FileFields = {
 };
 
 export const queryFetchUsers: Prisma.UserSelect = {
-    role: true,
+
     Avatar: {
         select: {
             File: {
@@ -28,7 +28,7 @@ export const queryFetchUsers: Prisma.UserSelect = {
 
 
 export const queryFetchUser: Prisma.UserSelect = {
-    role: true,
+
     Avatar: {
         select: {
             File: {

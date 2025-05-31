@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { BingoService } from '../services/bingo.service';
 
 /**
  * Cron job responsible for automatically generating invoices
@@ -8,18 +9,18 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 export class InvoiceGeneratorCron {
     private readonly _logger = new Logger(InvoiceGeneratorCron.name);
-    constructor() {}
+    constructor(private readonly _bingoService: BingoService) {}
 
     /**
      * Executes invoice generation daily at midnight
      * This will generate new invoices for subscriptions with billing date today
      */
-    @Cron(CronExpression.EVERY_10_SECONDS) //Temas de prueba
+    @Cron(CronExpression.EVERY_5_MINUTES) //Temas de prueba
     async handleDailyInvoiceGeneration(): Promise<void> {
         this._logger.log('Starting daily invoice generation process...');
 
         try {
-            //HACER VALIDACIONES DE PAGOS   
+            await this._bingoService.validateTicketsPayments();
         } catch (error) {
             this._logger.error('Error in invoice generation process:', error);
         }
