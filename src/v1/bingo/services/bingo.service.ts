@@ -24,7 +24,7 @@ export class BingoService {
                             numbers: this.generateBingoNumbers(),
                         })),
                     },
-                    numbers: this.generateBingoNumbers(),
+                    numbers: this.generateEventNumbers(),
                 },
                 include: {
                     cartons: true,
@@ -35,6 +35,16 @@ export class BingoService {
         });
 
         return event;
+    }
+
+    private generateEventNumbers(): number[] {
+        const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
+        // Mezclar el array usando Fisher-Yates
+        for (let i = numbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        return numbers;
     }
 
     async getEvents(query: BingoEventQueryDto) {
