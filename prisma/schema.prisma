@@ -43,6 +43,7 @@ enum ETicketStatus {
   SOLD
   USED
   CANCELLED
+  GAIN
 }
 
 enum ECartonStatus {
