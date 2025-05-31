@@ -1,8 +1,10 @@
 #!/bin/bash
 
+#bash ./build_and_run.bash ./Dockerfile api
+
 # Variables
-DOCKER_USERNAME="miguelsanz72"
-PREFIX="prefix_"
+DOCKER_USERNAME="balbinojose"
+PREFIX="bingo_"
 DOCKERFILE=$1
 SERVICE=$2
 
@@ -14,7 +16,7 @@ if [ -z "$DOCKERFILE" ] || [ -z "$SERVICE" ]; then
 fi
 
 # Construir la imagen Docker usando el Dockerfile proporcionado
-docker build -f $DOCKERFILE -t $SERVICE:latest .
+ docker build --platform linux/amd64 -f $DOCKERFILE -t $SERVICE:latest .
 
 # Etiquetar la imagen con el prefijo
 IMAGE_TAG="$DOCKER_USERNAME/$PREFIX$SERVICE:latest"
