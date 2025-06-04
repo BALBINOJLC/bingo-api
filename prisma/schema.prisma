@@ -141,6 +141,7 @@ model BingoEvent {
   commission  Float        @default(0)
   cartons     Carton[] // Relación con los cartones
   tickets     Ticket[] // Relación con los tickets vendidos
+  image_url   String?
   numbers     Int[]
   created_at  DateTime     @default(now())
   deleted_at  DateTime?

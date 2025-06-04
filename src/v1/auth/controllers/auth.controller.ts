@@ -1,4 +1,4 @@
-import { Body, Post, UseGuards, Request, Res, Query, Controller, Req, HttpStatus, Get } from '@nestjs/common';
+import { Body, Post, UseGuards, Request, Res, Query, Controller, Req, HttpStatus, Get, Param } from '@nestjs/common';
 import { AuthService } from '../services';
 import { ApiBasicAuth, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { envs } from 'src/config/envs';
@@ -113,6 +113,17 @@ export class AuthController {
         const { token } = req.params;
         return RequestHandlerUtil.handleRequest({
             action: () => this._authService.activateAccount(token),
+            res,
+            module: this.constructor.name,
+            actionDescription: 'Activate Account',
+            redirectUrl: `${this.CLIENT_URI}/auth/sign-in`,
+        });
+    }
+
+    @Get('verify/:token')
+    async checkToken(@Param('token') token: string, @Res() res: Response): Promise<any> {
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.checkToken(token),
             res,
             module: this.constructor.name,
             actionDescription: 'Activate Account',

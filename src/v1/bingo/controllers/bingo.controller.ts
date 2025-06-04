@@ -21,6 +21,13 @@ export class BingoController {
         return this.bingoService.createEvent(createBingoEventDto);
     }
 
+    @Get(':status')
+    @ApiOperation({ summary: 'Obtener todos los eventos de bingo' })
+    @ApiResponse({ status: 200, description: 'Lista de eventos obtenida exitosamente' })
+    async getEventsAvailables(@Param('status') status: string) {
+        return this.bingoService.getEventsByStatus(status);
+    }
+
     @Get()
     @ApiOperation({ summary: 'Obtener todos los eventos de bingo' })
     @ApiResponse({ status: 200, description: 'Lista de eventos obtenida exitosamente' })

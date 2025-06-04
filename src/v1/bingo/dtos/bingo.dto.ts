@@ -34,6 +34,9 @@ export class CreateBingoEventDto {
     @IsInt()
     @Min(1)
     total_cartons: number;
+
+    @IsString()
+    image_url: string;
 }
 
 export class BingoEventResponseDto {

@@ -199,4 +199,16 @@ export class AuthService {
         const string = buff.toString('ascii').split(':');
         return string;
     }
+
+    async checkToken(token: string) {
+        const { email } = this.jwtService.verify(token);
+        const user = await this.prismaS.user.findUnique({
+            where: { email },
+        });
+        return {
+            ok: true,
+            user: user,
+            message: 'Token is valid',
+        };
+    }
 }

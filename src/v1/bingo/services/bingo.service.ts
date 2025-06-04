@@ -82,6 +82,18 @@ export class BingoService {
         return events;
     }
 
+    async getEventsByStatus(status: string) {
+        const events = await this.prisma.bingoEvent.findMany({
+            where: { status: status as EBingoStatus, is_deleted: false },
+            include: {
+                cartons: {
+                    include: { Ticket: true },
+                },
+            },
+        });
+        return events;
+    }
+
     async getEvent(id: string) {
         const event = await this.prisma.bingoEvent.findFirst({
             where: {
