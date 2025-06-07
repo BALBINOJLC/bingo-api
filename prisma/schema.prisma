@@ -159,6 +159,7 @@ model Carton {
   numbers  Int[]
   Ticket   Ticket?
   ticketId String?
+  price    String?
 
   @@map("cartons")
 }

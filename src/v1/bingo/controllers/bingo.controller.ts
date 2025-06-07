@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Patch, Req } from '@nestjs/common';
 import { BingoService } from '../services/bingo.service';
 import { CreateBingoEventDto, BingoEventQueryDto, PurchaseTicketDto, UpdateBingoEventStatusDto } from '../dtos/bingo.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common';
+import { IRequestWithUser } from '@common';
 
 
 @ApiTags('BINGO')
@@ -80,5 +81,27 @@ export class BingoController {
         return this.bingoService.updateEventStatus(id, updateStatusDto);
     }
 
+    /* Cartons  */
+
+    @Get('events/:eventId/cartons/available')
+    @ApiOperation({ summary: 'Obtener cartones disponibles de un evento' })
+    @ApiResponse({ status: 200, description: 'Lista de cartones disponibles obtenida exitosamente' })
+    async getCartonsByEventId(@Param('eventId') eventId: string) {
+        return this.bingoService.getCartonsByEventId(eventId);
+    }
+
+    @Get('cartons/:cartonId/tickets')
+    @ApiOperation({ summary: 'Obtener tickets de un carton' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getCartonsTicketsForIdUser(@Param('cartonId') cartonId: string) {
+        return this.bingoService.getCartonsTicketsForIdUser(cartonId);
+    }
+
+    @Get('tickets/user/cartons-available/:userId')
+    @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getUserTickets(@Param('userId') userId: string) {
+        return this.bingoService.getCartonsTicketsForIdUser(userId);
+    }
 
 }

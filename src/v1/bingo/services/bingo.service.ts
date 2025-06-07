@@ -329,4 +329,36 @@ export class BingoService {
 
         return events;
     }
+
+    async getCartonsByEventId(eventId: string) {
+        const cartons = await this.prisma.carton.findMany({
+            where: {
+                event_id: eventId,
+                status: ECartonStatus.AVAILABLE,
+            },
+        });
+
+        return cartons;
+    }
+
+    async getCartonsTicketsForIdUser(userId: string) {
+        const tickets = await this.prisma.ticket.findMany({
+            where: {
+                user_id: userId,
+                is_deleted: false
+            },
+            include: {
+                carton: {
+                    include: {
+                        event: true
+                    }
+                }
+            },
+            orderBy: {
+                created_at: 'desc'
+            }
+        });
+
+        return tickets;
+    }
 }
