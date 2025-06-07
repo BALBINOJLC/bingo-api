@@ -305,4 +305,28 @@ export class BingoService {
 
         return tickets;
     }
+
+    async getAllEvents() {
+        const events = await this.prisma.bingoEvent.findMany({
+            where: {
+                is_deleted: false
+            },
+            include: {
+                cartons: {
+                    include: {
+                        Ticket: {
+                            where: {
+                                is_deleted: false
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: {
+                created_at: 'desc'
+            }
+        });
+
+        return events;
+    }
 }

@@ -14,6 +14,13 @@ import { JwtAuthGuard } from '@common';
 export class BingoController {
     constructor(private readonly bingoService: BingoService) {}
 
+    @Get('all')
+    @ApiOperation({ summary: 'Obtener todos los eventos de bingo sin filtros' })
+    @ApiResponse({ status: 200, description: 'Lista completa de eventos obtenida exitosamente' })
+    async getAllEvents() {
+        return this.bingoService.getAllEvents();
+    }
+
     @Post()
     @ApiOperation({ summary: 'Crear un nuevo evento de bingo' })
     @ApiResponse({ status: 201, description: 'Evento creado exitosamente' })
@@ -72,4 +79,6 @@ export class BingoController {
     ) {
         return this.bingoService.updateEventStatus(id, updateStatusDto);
     }
+
+
 }

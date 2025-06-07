@@ -58,7 +58,7 @@ export class AuthService {
             if (user) {
                 throw new CustomError({
                     statusCode: HttpStatus.CONFLICT,
-                    message: 'AUTH.ERRORS.ALREADY_EXISTS',
+                    message: 'El usuario con el correo ' + email + ' o cedula ' + dni + ' ya existe', //Perdon miguel
                     module: this.constructor.name,
                 });
             }
@@ -79,6 +79,8 @@ export class AuthService {
                         last_name,
                         dni: registerUserDto.dni.replace(/[^\w\s]/gi, ''),
                         role: registerUserDto.role ?? EUserRole.CLIENT,
+                        is_active: registerUserDto.is_active ?? true,
+                        email_verify: registerUserDto.email_verify ?? true,
                         Avatar: {
                             create: {
                                 file_id: newFile.id,
