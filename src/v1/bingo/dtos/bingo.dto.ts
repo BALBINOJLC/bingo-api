@@ -78,7 +78,7 @@ export class PurchaseTicketDto {
     @IsString()
     amount_payment: string;
 
-    @IsString()e
+    @IsString()
     reference_payment: string;
 
     @IsString()

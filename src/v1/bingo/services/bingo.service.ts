@@ -341,24 +341,24 @@ export class BingoService {
         return cartons;
     }
 
-    async getCartonsTicketsForIdUser(userId: string) {
+    async getCartonsTicketsForIdUser(userId: string, eventId: string) {
         const tickets = await this.prisma.ticket.findMany({
             where: {
                 user_id: userId,
-                is_deleted: false
+                is_deleted: false,
+                event_id: eventId
             },
             include: {
-                carton: {
-                    include: {
-                        event: true
-                    }
-                }
+                carton: true
             },
             orderBy: {
                 created_at: 'desc'
             }
         });
 
-        return tickets;
+        // Extraer los cartones de los tickets
+        const cartons = tickets.map(ticket => ticket.carton);
+        
+        return cartons;
     }
 }

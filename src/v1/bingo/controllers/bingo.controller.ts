@@ -5,7 +5,6 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common';
 import { IRequestWithUser } from '@common';
 
-
 @ApiTags('BINGO')
 @Controller({
     version: '1',
@@ -20,6 +19,12 @@ export class BingoController {
     @ApiResponse({ status: 200, description: 'Lista completa de eventos obtenida exitosamente' })
     async getAllEvents() {
         return this.bingoService.getAllEvents();
+    }
+    @Post('tickets/purchase/online')
+    @ApiOperation({ summary: 'Comprar un ticket de bingo' })
+    @ApiResponse({ status: 201, description: 'Ticket comprado exitosamente' })
+    async purchaseTicket(@Body() purchaseTicketDto: PurchaseTicketDto) {
+        return this.bingoService.purchaseTicket(purchaseTicketDto);
     }
 
     @Post()
@@ -57,13 +62,6 @@ export class BingoController {
         return this.bingoService.deleteEvent(id);
     }
 
-    @Post('tickets/purchase')
-    @ApiOperation({ summary: 'Comprar un ticket de bingo' })
-    @ApiResponse({ status: 201, description: 'Ticket comprado exitosamente' })
-    async purchaseTicket(@Body() purchaseTicketDto: PurchaseTicketDto) {
-        return this.bingoService.purchaseTicket(purchaseTicketDto);
-    }
-
     @Get('events/:eventId/cartons/available')
     @ApiOperation({ summary: 'Obtener cartones disponibles de un evento' })
     @ApiResponse({ status: 200, description: 'Lista de cartones disponibles obtenida exitosamente' })
@@ -74,10 +72,7 @@ export class BingoController {
     @Patch(':id/status')
     @ApiOperation({ summary: 'Actualizar el estado de un evento de bingo' })
     @ApiResponse({ status: 200, description: 'Estado del evento actualizado exitosamente' })
-    async updateEventStatus(
-        @Param('id') id: string,
-        @Body() updateStatusDto: UpdateBingoEventStatusDto,
-    ) {
+    async updateEventStatus(@Param('id') id: string, @Body() updateStatusDto: UpdateBingoEventStatusDto) {
         return this.bingoService.updateEventStatus(id, updateStatusDto);
     }
 
@@ -90,18 +85,12 @@ export class BingoController {
         return this.bingoService.getCartonsByEventId(eventId);
     }
 
-    @Get('cartons/:cartonId/tickets')
-    @ApiOperation({ summary: 'Obtener tickets de un carton' })
-    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
-    async getCartonsTicketsForIdUser(@Param('cartonId') cartonId: string) {
-        return this.bingoService.getCartonsTicketsForIdUser(cartonId);
-    }
+ 
 
-    @Get('tickets/user/cartons-available/:userId')
+    @Get('tickets/user/cartons-available/:userId/:eventId')
     @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
     @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
-    async getUserTickets(@Param('userId') userId: string) {
-        return this.bingoService.getCartonsTicketsForIdUser(userId);
+    async getUserTickets(@Param('userId') userId: string, @Param('eventId') eventId: string) {
+        return this.bingoService.getCartonsTicketsForIdUser(userId, eventId);
     }
-
 }
