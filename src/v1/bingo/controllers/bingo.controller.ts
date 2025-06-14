@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Patch, Req } from '@nestjs/common';
 import { BingoService } from '../services/bingo.service';
-import { CreateBingoEventDto, BingoEventQueryDto, PurchaseTicketDto, UpdateBingoEventStatusDto } from '../dtos/bingo.dto';
+import { CreateBingoEventDto, BingoEventQueryDto, PurchaseTicketDto, UpdateBingoEventStatusDto, PurchaseTicketSuperAdminDto } from '../dtos/bingo.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common';
 import { IRequestWithUser } from '@common';
@@ -14,6 +14,15 @@ import { IRequestWithUser } from '@common';
 export class BingoController {
     constructor(private readonly bingoService: BingoService) {}
 
+
+    @Get('users')
+    @ApiOperation({ summary: 'Obtener tickets de un evento' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getUsersTicketsByEventId() {
+        return this.bingoService.getUsersEvents();
+    }
+
+
     @Get('all')
     @ApiOperation({ summary: 'Obtener todos los eventos de bingo sin filtros' })
     @ApiResponse({ status: 200, description: 'Lista completa de eventos obtenida exitosamente' })
@@ -23,7 +32,7 @@ export class BingoController {
     @Post('tickets/purchase/online')
     @ApiOperation({ summary: 'Comprar un ticket de bingo' })
     @ApiResponse({ status: 201, description: 'Ticket comprado exitosamente' })
-    async purchaseTicket(@Body() purchaseTicketDto: any) {
+    async purchaseTicket(@Body() purchaseTicketDto: PurchaseTicketDto) {
         return this.bingoService.purchaseTicket(purchaseTicketDto);
     }
 
@@ -37,7 +46,7 @@ export class BingoController {
     @Get(':status')
     @ApiOperation({ summary: 'Obtener todos los eventos de bingo' })
     @ApiResponse({ status: 200, description: 'Lista de eventos obtenida exitosamente' })
-    async getEventsAvailables(@Param('status') status: string) {
+    async getEventsAvailable(@Param('status') status: string) {
         return this.bingoService.getEventsByStatus(status);
     }
 
@@ -92,7 +101,6 @@ export class BingoController {
         return this.bingoService.createCartonForEvent(eventId, price, quantity);
     }
 
- 
 
     @Get('tickets/user/cartons-available/:userId/:eventId')
     @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
@@ -100,4 +108,39 @@ export class BingoController {
     async getUserTickets(@Param('userId') userId: string, @Param('eventId') eventId: string) {
         return this.bingoService.getCartonsTicketsForIdUser(userId, eventId);
     }
+
+
+    /* Tickets purchase and cartons */
+    @Get('tickets/event/:eventId')
+    @ApiOperation({ summary: 'Obtener tickets de un evento' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getTicketsByEventId(@Param('eventId') eventId: string) {
+        return this.bingoService.getsTicketsByEventId(eventId);
+    }
+
+    @Patch('tickets-cartons/event/:ticketId')
+    @ApiOperation({ summary: 'Obtener tickets de un evento' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async updatedStatusTicketsAndCartons(@Param('ticketId') ticketId: string) {
+        return this.bingoService.updatedStatusTicketsAndCartons(ticketId);
+    }
+
+
+    @Post('tickets/purchase/super_admin')
+    @ApiOperation({ summary: 'Comprar un ticket de bingo' })
+    @ApiResponse({ status: 201, description: 'Ticket comprado exitosamente' })
+    async purchaseTicketSuperAdmin(@Body() purchaseTicketDto: PurchaseTicketSuperAdminDto) {
+        return this.bingoService.purchaseTicketSuperAdmin(purchaseTicketDto);
+    }
+
+
+
+    
+    
+
+
+
+  
 }
+
+

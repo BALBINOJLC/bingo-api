@@ -82,6 +82,16 @@ export class PurchaseTicketDto {
     number_payment: string;
 }
 
+export class PurchaseTicketSuperAdminDto {
+    @IsString()
+    user_id: string;
+
+    @IsNumber()
+    carton_id: number;
+
+
+}
+
 export class UpdateBingoEventStatusDto {
     @IsEnum(EBingoStatus)
     @IsOptional()

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@prisma';
-import { CreateBingoEventDto, BingoEventQueryDto, PurchaseTicketDto, UpdateBingoEventStatusDto } from '../dtos/bingo.dto';
+import { CreateBingoEventDto, BingoEventQueryDto, PurchaseTicketDto, UpdateBingoEventStatusDto, PurchaseTicketSuperAdminDto } from '../dtos/bingo.dto';
 import { EBingoStatus, ECartonStatus, ETicketStatus, Prisma } from '@prisma/client';
 import axios from 'axios';
 import { getAllJSDocTagsOfKind } from 'typescript';
@@ -232,6 +232,7 @@ export class BingoService {
                 id: true,
                 numbers: true,
                 status: true,
+                price: true,
             },
         });
 
@@ -257,7 +258,7 @@ export class BingoService {
         return this.prisma.bingoEvent.update({
             where: { id },
             data: {
-               ...updateStatusDto,
+                ...updateStatusDto,
             },
         });
     }
@@ -348,8 +349,44 @@ export class BingoService {
         return cartons;
     }
 
+    async getsTicketsByEventId(eventId: string) {
+        const tickets = await this.prisma.ticket.findMany({
+            where: {
+                event_id: eventId,
+            },
+            include: {
+                carton: true,
+            },
+        });
+
+        return tickets;
+    }
+
+    async updatedStatusTicketsAndCartons(ticketId: string) {
+        const ticket = await this.prisma.ticket.update({
+            where: {
+                id: ticketId,
+            },
+            data: {
+                status: ETicketStatus.SOLD,
+            },
+        });
+
+        await this.prisma.carton.update({
+            where: {
+                id: ticket.carton_id,
+            },
+            data: {
+                status: ECartonStatus.SOLD,
+            },
+        });
+
+        return {
+            message: 'Tickets y cartones actualizados exitosamente',
+        };
+    }
+
     async createCartonForEvent(eventId: string, price: number, quantity: number) {
-      
         for (let i = 0; i < quantity; i++) {
             await this.prisma.carton.create({
                 data: {
@@ -394,4 +431,59 @@ export class BingoService {
 
         return cartons;
     }
+
+    /* Users */
+
+    async getUsersEvents() {
+        const users = await this.prisma.user.findMany({
+            where: {
+                is_deleted: false,
+            },
+        });
+        return users;
+    }
+
+ 
+
+        async purchaseTicketSuperAdmin(purchaseTicketDto: PurchaseTicketSuperAdminDto) {
+            const { user_id, carton_id } = purchaseTicketDto;
+    
+            return this.prisma.$transaction(async (prisma) => {
+                // Verificar si el cartón está disponible
+                const carton = await prisma.carton.findFirst({
+                    where: {
+                        id: carton_id,
+                        status: ECartonStatus.AVAILABLE,
+                    },
+                    include: {
+                        event: true,
+                    },
+                });
+    
+                if (!carton) {
+                    throw new NotFoundException('Cartón no disponible');
+                }
+    
+                // Crear el ticket
+                const ticket = await prisma.ticket.create({
+                    data: {
+                        status: ETicketStatus.SOLD,
+                        user: { connect: { id: user_id } },
+                        carton: { connect: { id: carton_id } },
+                        event: { connect: { id: carton.event_id } },
+                        reference_payment: 'SUPER_ADMIN',
+                        number_payment: 'SUPER_ADMIN',
+                        amount_payment: carton.price,
+                    },
+                });
+    
+                // Actualizar el estado del cartón
+                await prisma.carton.update({
+                    where: { id: carton_id },
+                    data: { status: ECartonStatus.PROCESSING_SOLD },
+                });
+    
+                return ticket;
+            });
+        }
 }
