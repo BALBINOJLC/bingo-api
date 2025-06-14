@@ -12,29 +12,36 @@ export class BingoService {
     async createEvent(createBingoEventDto: CreateBingoEventDto) {
         const { total_cartons, ...eventData } = createBingoEventDto;
 
-        // Crear el evento de bingo con transacción
-        const event = await this.prisma.$transaction(async (prisma) => {
-            // Crear el evento
-            const newEvent = await prisma.bingoEvent.create({
+        const newEvent = await this.prisma.bingoEvent.create({
+            data: {
+                name: eventData.name,
+                description: eventData.description,
+                start_date: eventData.start_date,
+                time_start: eventData.time_start,
+                status: eventData.status,
+                prize_pool: eventData.prize_pool,
+                image_url: eventData.image_url,
+                time_end: eventData.time_end,
+                total_cartons: total_cartons,
+                price_cardboard: createBingoEventDto.price_cardboard,
+                numbers: this.generateEventNumbers(),
+            },
+            include: {
+                cartons: true,
+            },
+        });
+        for (let i = 0; i < total_cartons; i++) {
+            await this.prisma.carton.create({
                 data: {
-                    ...eventData,
-                    cartons: {
-                        create: Array.from({ length: total_cartons }, (_, i) => ({
-                            status: ECartonStatus.AVAILABLE,
-                            numbers: this.generateBingoNumbers(),
-                        })),
-                    },
-                    numbers: this.generateEventNumbers(),
-                },
-                include: {
-                    cartons: true,
+                    status: ECartonStatus.AVAILABLE,
+                    numbers: this.generateBingoNumbers(),
+                    event: { connect: { id: newEvent.id } },
+                    price: createBingoEventDto.price_cardboard.toString(),
                 },
             });
+        }
 
-            return newEvent;
-        });
-
-        return event;
+        return newEvent;
     }
 
     private generateEventNumbers(): number[] {
@@ -155,7 +162,7 @@ export class BingoService {
             { min: 21, max: 40 }, // Segunda columna
             { min: 41, max: 60 }, // Tercera columna
             { min: 61, max: 80 }, // Cuarta columna
-            { min: 81, max: 100 }, // Quinta columna
+            { min: 81, max: 90 }, // Quinta columna
         ];
 
         for (let col = 0; col < 5; col++) {
@@ -250,7 +257,7 @@ export class BingoService {
         return this.prisma.bingoEvent.update({
             where: { id },
             data: {
-                status: updateStatusDto.status,
+               ...updateStatusDto,
             },
         });
     }
@@ -294,7 +301,7 @@ export class BingoService {
                             is_deleted: false,
                         },
                     });
-                } 
+                }
             } catch (error) {
                 await this.prisma.ticket.update({
                     where: { id: ticket.id },
@@ -309,22 +316,22 @@ export class BingoService {
     async getAllEvents() {
         const events = await this.prisma.bingoEvent.findMany({
             where: {
-                is_deleted: false
+                is_deleted: false,
             },
             include: {
                 cartons: {
                     include: {
                         Ticket: {
                             where: {
-                                is_deleted: false
-                            }
-                        }
-                    }
-                }
+                                is_deleted: false,
+                            },
+                        },
+                    },
+                },
             },
             orderBy: {
-                created_at: 'desc'
-            }
+                created_at: 'desc',
+            },
         });
 
         return events;
@@ -341,24 +348,50 @@ export class BingoService {
         return cartons;
     }
 
+    async createCartonForEvent(eventId: string, price: number, quantity: number) {
+      
+        for (let i = 0; i < quantity; i++) {
+            await this.prisma.carton.create({
+                data: {
+                    event_id: eventId,
+                    price: price.toString(),
+                    numbers: this.generateBingoNumbers(),
+                    status: ECartonStatus.AVAILABLE,
+                },
+            });
+        }
+        const event = await this.prisma.bingoEvent.findFirst({
+            where: {
+                id: eventId,
+            },
+        });
+        await this.prisma.bingoEvent.update({
+            where: { id: eventId },
+            data: {
+                total_cartons: event.total_cartons + quantity,
+            },
+        });
+        return { message: 'Cartones creados exitosamente' };
+    }
+
     async getCartonsTicketsForIdUser(userId: string, eventId: string) {
         const tickets = await this.prisma.ticket.findMany({
             where: {
                 user_id: userId,
                 is_deleted: false,
-                event_id: eventId
+                event_id: eventId,
             },
             include: {
-                carton: true
+                carton: true,
             },
             orderBy: {
-                created_at: 'desc'
-            }
+                created_at: 'desc',
+            },
         });
 
         // Extraer los cartones de los tickets
-        const cartons = tickets.map(ticket => ticket.carton);
-        
+        const cartons = tickets.map((ticket) => ticket.carton);
+
         return cartons;
     }
 }

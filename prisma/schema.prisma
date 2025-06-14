@@ -133,14 +133,14 @@ model BingoEvent {
   name        String
   description String
   start_date  String
-  end_date    String
   time_start  String
   time_end    String
   status      EBingoStatus
   prize_pool  Float        @default(0)
-  commission  Float        @default(0)
-  cartons     Carton[] // Relación con los cartones
-  tickets     Ticket[] // Relación con los tickets vendidos
+  cartons     Carton[]
+  total_cartons Int        @default(0)
+  tickets     Ticket[] 
+  price_cardboard Float        @default(0)
   image_url   String?
   numbers     Int[]
   created_at  DateTime     @default(now())

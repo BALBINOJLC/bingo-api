@@ -11,14 +11,13 @@ export class CreateBingoEventDto {
     @IsString()
     start_date: string;
 
-    @IsString()
-    end_date: string;
 
     @IsString()
     time_start: string;
 
     @IsString()
     time_end: string;
+
 
     @IsEnum(EBingoStatus)
     status: EBingoStatus;
@@ -27,9 +26,6 @@ export class CreateBingoEventDto {
     @Min(0)
     prize_pool: number;
 
-    @IsNumber()
-    @Min(0)
-    commission: number;
 
     @IsInt()
     @Min(1)
@@ -37,6 +33,10 @@ export class CreateBingoEventDto {
 
     @IsString()
     image_url: string;
+
+    @IsNumber()
+    @Min(0)
+    price_cardboard: number;
 }
 
 export class BingoEventResponseDto {
@@ -44,12 +44,9 @@ export class BingoEventResponseDto {
     name: string;
     description: string;
     start_date: string;
-    end_date: string;
     time_start: string;
-    time_end: string;
     status: EBingoStatus;
     prize_pool: number;
-    commission: number;
     created_at: Date;
     updated_at: Date;
 }
@@ -87,5 +84,35 @@ export class PurchaseTicketDto {
 
 export class UpdateBingoEventStatusDto {
     @IsEnum(EBingoStatus)
+    @IsOptional()
     status: EBingoStatus;
+    
+    @IsString()
+    @IsOptional()
+    name: string;
+
+    @IsString()
+    @IsOptional()
+    description: string;
+
+    @IsString()
+    @IsOptional()
+    start_date: string;
+
+    @IsString()
+    @IsOptional()
+    time_start: string;
+
+    @IsString()
+    @IsOptional()
+    time_end: string;
+
+    @IsNumber()
+    @IsOptional()
+    prize_pool: number;
+
+    @IsString()
+    @IsOptional()
+    image_url: string;
+
 } 

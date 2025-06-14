@@ -23,7 +23,7 @@ export class BingoController {
     @Post('tickets/purchase/online')
     @ApiOperation({ summary: 'Comprar un ticket de bingo' })
     @ApiResponse({ status: 201, description: 'Ticket comprado exitosamente' })
-    async purchaseTicket(@Body() purchaseTicketDto: PurchaseTicketDto) {
+    async purchaseTicket(@Body() purchaseTicketDto: any) {
         return this.bingoService.purchaseTicket(purchaseTicketDto);
     }
 
@@ -83,6 +83,13 @@ export class BingoController {
     @ApiResponse({ status: 200, description: 'Lista de cartones disponibles obtenida exitosamente' })
     async getCartonsByEventId(@Param('eventId') eventId: string) {
         return this.bingoService.getCartonsByEventId(eventId);
+    }
+    
+    @Post('events/:eventId/cartons')
+    @ApiOperation({ summary: 'Crear cartones para un evento' })
+    @ApiResponse({ status: 200, description: 'Cartones creados exitosamente' })
+    async createCartonsForEvent(@Param('eventId') eventId: string, @Body() {price, quantity}: {price: number, quantity: number}) {
+        return this.bingoService.createCartonForEvent(eventId, price, quantity);
     }
 
  
