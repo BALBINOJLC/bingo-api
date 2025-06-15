@@ -153,7 +153,7 @@ model BingoEvent {
   deleted_at      DateTime?
   is_deleted      Boolean      @default(false)
   updated_at      DateTime     @updatedAt
-  GameBingo       GameBingo[]
+  gameBingo            GameBingo?  
 
   @@map("bingo_events")
 }
@@ -209,10 +209,12 @@ model payments {
   updated_at           DateTime  @updatedAt
 }
 
+//Hacer la logica del juego con este bingo
+
 model GameBingo {
   id              String      @id @default(uuid()) @map("_id")
   event           BingoEvent  @relation(fields: [event_id], references: [id])
-  event_id        String
+  event_id        String      @unique  // Esto asegura la relación 1:1
   status          EGameStatus
   numbers_event   Int[]
   numbers_called  Int[]

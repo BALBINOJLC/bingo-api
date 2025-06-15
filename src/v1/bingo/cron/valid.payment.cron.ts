@@ -40,4 +40,15 @@ export class InvoiceGeneratorCron {
             this._logger.error('Error in overdue payment check:', error);
         }
     }
+
+    @Cron(CronExpression.EVERY_5_SECONDS) //Temas de prueba
+    async handleCreateGameBingo(): Promise<void> {
+        this._logger.log('Starting midday overdue payment check...');
+
+        try {
+            await this._bingoService.gameInProgress();
+        } catch (error) {
+            this._logger.error('Error in overdue payment check:', error);
+        }
+    }
 }

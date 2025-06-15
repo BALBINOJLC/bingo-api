@@ -7,7 +7,7 @@ import {
     UpdateBingoEventStatusDto,
     PurchaseTicketSuperAdminDto,
 } from '../dtos/bingo.dto';
-import { EBingoStatus, ECartonStatus, ETicketStatus, Prisma } from '@prisma/client';
+import { EBingoStatus, ECartonStatus, EGameStatus, ETicketStatus, Prisma } from '@prisma/client';
 import axios from 'axios';
 import { getAllJSDocTagsOfKind } from 'typescript';
 interface BingoWinner {
@@ -25,7 +25,7 @@ export class BingoService {
 
         // Primero generamos los números del evento
         const eventNumbers = this.generateBingoNumbers();
-        
+
         // Creamos el evento
         const newEvent = await this.prisma.bingoEvent.create({
             data: {
@@ -67,12 +67,22 @@ export class BingoService {
             await this.prisma.carton.create({
                 data: {
                     status: ECartonStatus.AVAILABLE,
-                    numbers: this.generateBingoNumbers(),
+                    numbers: this.generateCartonNumbers(),
                     event: { connect: { id: newEvent.id } },
                     price: createBingoEventDto.price_cardboard.toString(),
                 },
             });
         }
+
+        await this.prisma.gameBingo.create({
+            data: {
+                event_id: newEvent.id,
+                status: EGameStatus.PAUSED,
+                numbers_event: eventNumbers,
+                numbers_called: [],
+                winners_cartons: [],
+            },
+        });
 
         return newEvent;
     }
@@ -83,10 +93,10 @@ export class BingoService {
 
         for (let i = 0; i < count; i++) {
             const cartonNumbers: number[] = [];
-            const availableNumbers = [...eventNumbers].filter(n => !usedNumbers.has(n));
+            const availableNumbers = [...eventNumbers].filter((n) => !usedNumbers.has(n));
 
-            // Seleccionamos 12 números del evento para el cartón ganador
-            for (let j = 0; j < 12; j++) {
+            // Seleccionamos 15 números del evento para el cartón ganador
+            for (let j = 0; j < 15; j++) {
                 const randomIndex = Math.floor(Math.random() * availableNumbers.length);
                 const selectedNumber = availableNumbers[randomIndex];
                 cartonNumbers.push(selectedNumber);
@@ -102,25 +112,25 @@ export class BingoService {
         return winningCartons;
     }
 
-    private generateBingoNumbers(): number[] {
+    private generateCartonNumbers(): number[] {
         const numbers: number[] = [];
         const columns = [
-            { min: 1, max: 9 },     // Primera columna (1-9)
-            { min: 10, max: 19 },   // Segunda columna (10-19)
-            { min: 20, max: 29 },   // Tercera columna (20-29)
-            { min: 30, max: 39 },   // Cuarta columna (30-39)
-            { min: 40, max: 49 },   // Quinta columna (40-49)
-            { min: 50, max: 59 },   // Sexta columna (50-59)
-            { min: 60, max: 69 },   // Séptima columna (60-69)
-            { min: 70, max: 79 },   // Octava columna (70-79)
-            { min: 80, max: 90 },   // Novena columna (80-90)
+            { min: 1, max: 9 }, // Primera columna (1-9)
+            { min: 10, max: 19 }, // Segunda columna (10-19)
+            { min: 20, max: 29 }, // Tercera columna (20-29)
+            { min: 30, max: 39 }, // Cuarta columna (30-39)
+            { min: 40, max: 49 }, // Quinta columna (40-49)
+            { min: 50, max: 59 }, // Sexta columna (50-59)
+            { min: 60, max: 69 }, // Séptima columna (60-69)
+            { min: 70, max: 79 }, // Octava columna (70-79)
+            { min: 80, max: 90 }, // Novena columna (80-90)
         ];
 
         // Para cada columna, decidir cuántos números tendrá (1-3 números por columna)
         for (let col = 0; col < 9; col++) {
             const numbersInColumn = Math.floor(Math.random() * 3) + 1; // 1-3 números
             const columnNumbers = new Set<number>();
-            
+
             while (columnNumbers.size < numbersInColumn) {
                 const num = Math.floor(Math.random() * (columns[col].max - columns[col].min + 1)) + columns[col].min;
                 columnNumbers.add(num);
@@ -129,10 +139,10 @@ export class BingoService {
         }
 
         // Asegurar que el cartón tenga exactamente 12 números
-        while (numbers.length > 12) {
+        while (numbers.length > 15) {
             numbers.pop();
         }
-        while (numbers.length < 12) {
+        while (numbers.length < 15) {
             const col = Math.floor(Math.random() * 9);
             const num = Math.floor(Math.random() * (columns[col].max - columns[col].min + 1)) + columns[col].min;
             if (!numbers.includes(num)) {
@@ -143,6 +153,19 @@ export class BingoService {
         // Ordenar los números
         numbers.sort((a, b) => a - b);
 
+        return numbers;
+    }
+
+    private generateBingoNumbers(): number[] {
+        // Crear array con números del 1 al 90
+        const numbers = Array.from({ length: 90 }, (_, i) => i + 1);
+        
+        // Mezclar el array aleatoriamente (algoritmo Fisher-Yates)
+        for (let i = numbers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        
         return numbers;
     }
 
@@ -396,6 +419,7 @@ export class BingoService {
                         },
                     },
                 },
+                GameBingo: true
             },
             orderBy: {
                 created_at: 'desc',
@@ -620,9 +644,9 @@ export class BingoService {
 
     async checkBingoWinners(eventId: string): Promise<BingoWinner[]> {
         const event = await this.prisma.bingoEvent.findFirst({
-            where: { 
+            where: {
                 id: eventId,
-                is_deleted: false 
+                is_deleted: false,
             },
             include: {
                 cartons: {
@@ -632,16 +656,16 @@ export class BingoService {
                     include: {
                         Ticket: {
                             where: {
-                                status: ETicketStatus.SOLD
+                                status: ETicketStatus.SOLD,
                             },
                             include: {
                                 user: {
                                     select: {
                                         id: true,
-                                        display_name: true
-                                    }
-                                }
-                            }
+                                        display_name: true,
+                                    },
+                                },
+                            },
                         },
                     },
                 },
@@ -664,7 +688,7 @@ export class BingoService {
                     cartonId: carton.id,
                     userId: carton.Ticket.user.id,
                     userName: carton.Ticket.user.display_name,
-                    ticketId: carton.Ticket.id
+                    ticketId: carton.Ticket.id,
                 });
             }
         }
@@ -673,8 +697,135 @@ export class BingoService {
     }
 
     private isBingoWinner(cartonNumbers: number[], calledNumbers: Set<number>): boolean {
-        return cartonNumbers.every(number => 
-            number === 0 || calledNumbers.has(number)
-        );
+        return cartonNumbers.every((number) => number === 0 || calledNumbers.has(number));
+    }
+
+    async createGameBingo(eventId: string) {
+        const event = await this.prisma.bingoEvent.findFirst({
+            where: { id: eventId },
+        });
+
+        if (!event) {
+            throw new NotFoundException('Evento no encontrado');
+        }
+
+        const gameBingo = await this.prisma.gameBingo.create({
+            data: { event_id: eventId, status: EGameStatus.PAUSED },
+        });
+
+        return gameBingo;
+    }
+
+    async gameInProgress() {
+        const gameBingo = await this.prisma.gameBingo.findMany({
+            where: { status: EGameStatus.IN_PROGRESS },
+            include: {
+                event: true 
+            }
+        });
+
+        if (!gameBingo.length) {
+            return;
+        }
+
+      
+        for (const game of gameBingo) {
+            const numbersToCall = game.numbers_event.filter(
+                number => !game.numbers_called.includes(number)
+            );
+
+            if (numbersToCall.length > 0) {
+                const nextNumber = numbersToCall[0];
+                await this.prisma.gameBingo.update({
+                    where: { id: game.id },
+                    data: {
+                        numbers_called: [...game.numbers_called, nextNumber]
+                    }
+                });
+                const winners = await this.checkBingoWinners(game.event_id);
+                if (winners.length > 0) {
+                    await this.prisma.gameBingo.update({
+                        where: { id: game.id },
+                        data: {
+                            winners_cartons: winners.map(w => w.cartonId),
+                            status: EGameStatus.FINISHED 
+                        }
+                    });
+                }
+            }
+        }
+
+        return gameBingo;
+    }
+
+    async gameWinner() {
+        const gameBingo = await this.prisma.gameBingo.findMany({
+            where: { status: EGameStatus.IN_PROGRESS },
+            include: {
+                event: {
+                    include: {
+                        cartons: {
+                            where: {
+                                status: ECartonStatus.SOLD,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!gameBingo.length) {
+            return;
+        }
+
+        const gameBingoInProgress = gameBingo.map((game) => {
+            return {
+                id: game.id,
+                event_id: game.event_id,
+                status: game.status,
+            };
+        });
+
+        for (const game of gameBingoInProgress) {
+            const winners = await this.checkBingoWinners(game.event_id);
+            if (winners.length > 0) {
+                await this.prisma.gameBingo.update({
+                    where: { id: game.id },
+                    data: { winners_cartons: winners.map((w) => w.cartonId) },
+                });
+            }
+        }
+
+        return gameBingoInProgress;
+    }
+
+    async getGameBingo(eventId: string){
+        const gameBingo = await this.prisma.gameBingo.findFirst({
+            where: { event_id: eventId, status: EGameStatus.IN_PROGRESS },
+            include: {
+                event: {
+                    include: {
+                        cartons: {
+                            where: {
+                                status: ECartonStatus.SOLD,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return gameBingo;
+    }
+
+
+    async updateStatusGame(eventId: string, status: EGameStatus) {
+
+        const gameBingo = await this.prisma.gameBingo.update({
+            where: { id: eventId },
+            data: { status: status },
+        });
+
+
+        return gameBingo;
     }
 }

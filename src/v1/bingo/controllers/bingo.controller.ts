@@ -10,6 +10,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common';
 import { IRequestWithUser } from '@common';
+import { EGameStatus } from '@prisma/client';
 
 @ApiTags('BINGO')
 @Controller({
@@ -160,4 +161,16 @@ export class BingoController {
     async getEventNumbers(@Param('eventId') eventId: string) {
         return this.bingoService.getEventNumbers(eventId);
     }
+
+    @Get('game-bingo/:eventId')
+    async getGameBingo(@Param('eventId') eventId: string) {
+        return this.bingoService.getGameBingo(eventId);
+    }
+
+
+    @Patch('events/:eventId/status-game')
+    async updateStatusGame(@Param('eventId') eventId: string, @Body() body: { status: EGameStatus }) {
+        return this.bingoService.updateStatusGame(eventId, body.status);
+    }
+
 }
