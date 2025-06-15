@@ -1,6 +1,12 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Patch, Req } from '@nestjs/common';
 import { BingoService } from '../services/bingo.service';
-import { CreateBingoEventDto, BingoEventQueryDto, PurchaseTicketDto, UpdateBingoEventStatusDto, PurchaseTicketSuperAdminDto } from '../dtos/bingo.dto';
+import {
+    CreateBingoEventDto,
+    BingoEventQueryDto,
+    PurchaseTicketDto,
+    UpdateBingoEventStatusDto,
+    PurchaseTicketSuperAdminDto,
+} from '../dtos/bingo.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common';
 import { IRequestWithUser } from '@common';
@@ -14,14 +20,12 @@ import { IRequestWithUser } from '@common';
 export class BingoController {
     constructor(private readonly bingoService: BingoService) {}
 
-
     @Get('users')
     @ApiOperation({ summary: 'Obtener tickets de un evento' })
     @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
     async getUsersTicketsByEventId() {
         return this.bingoService.getUsersEvents();
     }
-
 
     @Get('all')
     @ApiOperation({ summary: 'Obtener todos los eventos de bingo sin filtros' })
@@ -57,7 +61,7 @@ export class BingoController {
         return this.bingoService.getEvents(query);
     }
 
-    @Get(':id')
+    @Get('event/:id')
     @ApiOperation({ summary: 'Obtener un evento de bingo por ID' })
     @ApiResponse({ status: 200, description: 'Evento obtenido exitosamente' })
     async getEvent(@Param('id') id: string) {
@@ -93,14 +97,13 @@ export class BingoController {
     async getCartonsByEventId(@Param('eventId') eventId: string) {
         return this.bingoService.getCartonsByEventId(eventId);
     }
-    
+
     @Post('events/:eventId/cartons')
     @ApiOperation({ summary: 'Crear cartones para un evento' })
     @ApiResponse({ status: 200, description: 'Cartones creados exitosamente' })
-    async createCartonsForEvent(@Param('eventId') eventId: string, @Body() {price, quantity}: {price: number, quantity: number}) {
+    async createCartonsForEvent(@Param('eventId') eventId: string, @Body() { price, quantity }: { price: number; quantity: number }) {
         return this.bingoService.createCartonForEvent(eventId, price, quantity);
     }
-
 
     @Get('tickets/user/cartons-available/:userId/:eventId')
     @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
@@ -109,6 +112,12 @@ export class BingoController {
         return this.bingoService.getCartonsTicketsForIdUser(userId, eventId);
     }
 
+    @Get('tickets/user/:userId')
+    @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getUserTicketsByUserId(@Param('userId') userId: string) {
+        return this.bingoService.getTicketsByUserId(userId);
+    }
 
     /* Tickets purchase and cartons */
     @Get('tickets/event/:eventId')
@@ -125,7 +134,6 @@ export class BingoController {
         return this.bingoService.updatedStatusTicketsAndCartons(ticketId);
     }
 
-
     @Post('tickets/purchase/super_admin')
     @ApiOperation({ summary: 'Comprar un ticket de bingo' })
     @ApiResponse({ status: 201, description: 'Ticket comprado exitosamente' })
@@ -133,14 +141,24 @@ export class BingoController {
         return this.bingoService.purchaseTicketSuperAdmin(purchaseTicketDto);
     }
 
+    /* LIVE BINGO */
+
+    @Get('live-bingo/participants/:eventId')
+    @ApiOperation({ summary: 'Obtener participantes de un evento' })
+    @ApiResponse({ status: 200, description: 'Lista de participantes obtenida exitosamente' })
+    async getParticipants(@Param('eventId') eventId: string) {
+        return this.bingoService.getTicketsByEventId(eventId);
+    }
 
 
-    
-    
 
+    @Get('events/:eventId/next-number')
+    async getNextNumber(@Param('eventId') eventId: string) {
+        return this.bingoService.getProximoNumberEvent(eventId);
+    }
 
-
-  
+    @Get('events-numbers/:eventId/numbers')
+    async getEventNumbers(@Param('eventId') eventId: string) {
+        return this.bingoService.getEventNumbers(eventId);
+    }
 }
-
-
