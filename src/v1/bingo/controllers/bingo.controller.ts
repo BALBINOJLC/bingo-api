@@ -142,7 +142,6 @@ export class BingoController {
     }
 
     /* LIVE BINGO */
-
     @Get('live-bingo/participants/:eventId')
     @ApiOperation({ summary: 'Obtener participantes de un evento' })
     @ApiResponse({ status: 200, description: 'Lista de participantes obtenida exitosamente' })

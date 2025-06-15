@@ -30,6 +30,12 @@ enum EUserStatus {
   REJECTED
 }
 
+enum EGameStatus {
+  IN_PROGRESS
+  FINISHED
+  PAUSED
+}
+
 // Nuevos enums para el bingo
 enum EBingoStatus {
   INACTIVE
@@ -129,24 +135,25 @@ model Avatar {
 
 // Modelos para el bingo
 model BingoEvent {
-  id          String       @id @default(uuid()) @map("_id")
-  name        String
-  description String
-  start_date  String
-  time_start  String
-  time_end    String
-  status      EBingoStatus
-  prize_pool  Float        @default(0)
-  cartons     Carton[]
-  total_cartons Int        @default(0)
-  tickets     Ticket[] 
+  id              String       @id @default(uuid()) @map("_id")
+  name            String
+  description     String
+  start_date      String
+  time_start      String
+  time_end        String
+  status          EBingoStatus
+  prize_pool      Float        @default(0)
+  cartons         Carton[]
+  total_cartons   Int          @default(0)
+  tickets         Ticket[]
   price_cardboard Float        @default(0)
-  image_url   String?
-  numbers     Int[]
-  created_at  DateTime     @default(now())
-  deleted_at  DateTime?
-  is_deleted  Boolean      @default(false)
-  updated_at  DateTime     @updatedAt
+  image_url       String?
+  numbers         Int[]
+  created_at      DateTime     @default(now())
+  deleted_at      DateTime?
+  is_deleted      Boolean      @default(false)
+  updated_at      DateTime     @updatedAt
+  GameBingo       GameBingo[]
 
   @@map("bingo_events")
 }
@@ -200,4 +207,16 @@ model payments {
   deleted_at           DateTime?
   is_deleted           Boolean   @default(false)
   updated_at           DateTime  @updatedAt
+}
+
+model GameBingo {
+  id              String      @id @default(uuid()) @map("_id")
+  event           BingoEvent  @relation(fields: [event_id], references: [id])
+  event_id        String
+  status          EGameStatus
+  numbers_event   Int[]
+  numbers_called  Int[]
+  winners_cartons Int[]
+
+  @@map("game_bingo")
 }
