@@ -159,13 +159,13 @@ export class BingoService {
     private generateBingoNumbers(): number[] {
         // Crear array con números del 1 al 90
         const numbers = Array.from({ length: 90 }, (_, i) => i + 1);
-        
+
         // Mezclar el array aleatoriamente (algoritmo Fisher-Yates)
         for (let i = numbers.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
         }
-        
+
         return numbers;
     }
 
@@ -226,6 +226,7 @@ export class BingoService {
                 cartons: {
                     include: { Ticket: true },
                 },
+                gameBingo: true,
             },
         });
 
@@ -419,7 +420,7 @@ export class BingoService {
                         },
                     },
                 },
-                GameBingo: true
+                gameBingo: true,
             },
             orderBy: {
                 created_at: 'desc',
@@ -528,6 +529,28 @@ export class BingoService {
             where: {
                 user_id: userId,
                 is_deleted: false,
+            },
+            include: {
+                carton: {
+                    include: {
+                        event: true,
+                    },
+                },
+            },
+            orderBy: {
+                created_at: 'desc',
+            },
+        });
+
+        return tickets;
+    }
+
+    async getTicketsByUserIdEvent(userId: string, eventId: string) {
+        const tickets = await this.prisma.ticket.findMany({
+            where: {
+                user_id: userId,
+                is_deleted: false,
+                event_id: eventId,
             },
             include: {
                 carton: {
@@ -720,36 +743,33 @@ export class BingoService {
         const gameBingo = await this.prisma.gameBingo.findMany({
             where: { status: EGameStatus.IN_PROGRESS },
             include: {
-                event: true 
-            }
+                event: true,
+            },
         });
 
         if (!gameBingo.length) {
             return;
         }
 
-      
         for (const game of gameBingo) {
-            const numbersToCall = game.numbers_event.filter(
-                number => !game.numbers_called.includes(number)
-            );
+            const numbersToCall = game.numbers_event.filter((number) => !game.numbers_called.includes(number));
 
             if (numbersToCall.length > 0) {
                 const nextNumber = numbersToCall[0];
                 await this.prisma.gameBingo.update({
                     where: { id: game.id },
                     data: {
-                        numbers_called: [...game.numbers_called, nextNumber]
-                    }
+                        numbers_called: [...game.numbers_called, nextNumber],
+                    },
                 });
                 const winners = await this.checkBingoWinners(game.event_id);
                 if (winners.length > 0) {
                     await this.prisma.gameBingo.update({
                         where: { id: game.id },
                         data: {
-                            winners_cartons: winners.map(w => w.cartonId),
-                            status: EGameStatus.FINISHED 
-                        }
+                            winners_cartons: winners.map((w) => w.cartonId),
+                            status: EGameStatus.FINISHED,
+                        },
                     });
                 }
             }
@@ -799,7 +819,7 @@ export class BingoService {
         return gameBingoInProgress;
     }
 
-    async getGameBingo(eventId: string){
+    async getGameBingo(eventId: string) {
         const gameBingo = await this.prisma.gameBingo.findFirst({
             where: { event_id: eventId, status: EGameStatus.IN_PROGRESS },
             include: {
@@ -817,15 +837,69 @@ export class BingoService {
         return gameBingo;
     }
 
-
     async updateStatusGame(eventId: string, status: EGameStatus) {
+        const findGame = await this.prisma.gameBingo.findUnique({
+            where: { event_id: eventId },
+        });
 
         const gameBingo = await this.prisma.gameBingo.update({
-            where: { id: eventId },
+            where: { id: findGame.id },
             data: { status: status },
         });
 
-
         return gameBingo;
+    }
+
+    async resetGame(eventId: string) {
+        const findGame = await this.prisma.gameBingo.findUnique({
+            where: { event_id: eventId },
+        });
+
+        if (!findGame) {
+            throw new NotFoundException('Juego no encontrado');
+        }
+
+        const gameBingo = await this.prisma.gameBingo.update({
+            where: { id: findGame.id },
+            data: { status: EGameStatus.PAUSED, numbers_called: [], winners_cartons: [] },
+        });
+        return gameBingo;
+    }
+
+    async getNumberCalledGame(gameId: string) {
+        const gameBingo = await this.prisma.gameBingo.findUnique({
+            where: { id: gameId },
+        });
+
+        return  {
+            numbers_called: gameBingo.numbers_called,
+            status: gameBingo.status,
+        }
+    }
+
+  
+
+    async getParticipantsEvent(eventId: string) {
+        const users = await this.prisma.user.findMany({
+            where: { 
+                Tickets: { 
+                    some: { 
+                        event_id: eventId,
+                        status: ETicketStatus.SOLD,
+                        is_deleted: false
+                    } 
+                },
+                is_deleted: false
+            },
+            include: {
+                Tickets: {
+                  include: {
+                    carton: true,
+                  }
+                },
+            },
+        });
+
+        return users;
     }
 }

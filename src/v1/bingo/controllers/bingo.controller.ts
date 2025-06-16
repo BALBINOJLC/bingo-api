@@ -91,6 +91,20 @@ export class BingoController {
     }
 
     /* Cartons  */
+    @Get('tickets/user-cartons/:userId')
+    @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getUserTicketsByUserId(@Param('userId') userId: string) {
+        return this.bingoService.getTicketsByUserId(userId);
+    }
+
+    @Get('tickets/user-cartons/:userId/:eventId')
+    @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getUserTicketsByUserIdEvent(@Param('userId') userId: string, @Param('eventId') eventId: string) {
+        return this.bingoService.getTicketsByUserIdEvent(userId, eventId);
+    }
+
 
     @Get('events/:eventId/cartons/available')
     @ApiOperation({ summary: 'Obtener cartones disponibles de un evento' })
@@ -113,12 +127,6 @@ export class BingoController {
         return this.bingoService.getCartonsTicketsForIdUser(userId, eventId);
     }
 
-    @Get('tickets/user/:userId')
-    @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
-    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
-    async getUserTicketsByUserId(@Param('userId') userId: string) {
-        return this.bingoService.getTicketsByUserId(userId);
-    }
 
     /* Tickets purchase and cartons */
     @Get('tickets/event/:eventId')
@@ -173,4 +181,21 @@ export class BingoController {
         return this.bingoService.updateStatusGame(eventId, body.status);
     }
 
+    @Patch('events-reset/:eventId/game')
+    async resetGame(@Param('eventId') eventId: string) {
+        return this.bingoService.resetGame(eventId);
+    }
+
+    @Get('game/bingo/update/new-next/numbers-called/:gameId')
+    async getNumberCalledGame(@Param('gameId') gameId: string) {
+        return this.bingoService.getNumberCalledGame(gameId);
+    }
+
+
+ 
+
+    @Get('event/participants/bingo-event/:eventId')
+    async getParticipantsEvent(@Param('eventId') eventId: string) {
+        return this.bingoService.getParticipantsEvent(eventId);
+    }
 }
