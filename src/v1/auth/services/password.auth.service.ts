@@ -96,7 +96,7 @@ export class PasswordAuhService {
                 },
             });
             const resp = {
-                message: 'AUTH.PASSWORD_RESET_SUCCESS',
+                message: 'Contraseña restablecida correctamente',
             };
             return resp;
         } catch (err) {
@@ -155,7 +155,7 @@ export class PasswordAuhService {
             await this._emailService.forgotPassword(token, user);
 
             const resp = {
-                message: 'AUTH.FORGOT_PASSWORD_SUCCESS',
+                message: 'Se ha enviado un correo para restablecer la contraseña',
             };
             return resp;
         } catch (err) {

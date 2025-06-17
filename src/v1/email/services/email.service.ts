@@ -31,8 +31,8 @@ export class EmailService {
         this.CLIENT_URI = envs.node.client_uri;
         this.URI_BACK = envs.node.api_uri;
         this.sender = {
-            senderEmail: 'hola@gux.tech',
-            senderName: 'GUXTech',
+            senderEmail: 'bingoappbin@gmail.com',
+            senderName: 'BingoApp',
         };
 
         this.adminEmails = ['msanz@sicrux.tech'];
@@ -90,7 +90,7 @@ export class EmailService {
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
         sendSmtpEmail.to = [{ email: user.email }];
-        sendSmtpEmail.templateId = this.templates.BV_TP_RESET_PASSWORD;
+        sendSmtpEmail.templateId = 1;
         sendSmtpEmail.sender = { name: this.sender.senderName, email: this.sender.senderEmail };
         sendSmtpEmail.params = {
             userName: user.user_name,
