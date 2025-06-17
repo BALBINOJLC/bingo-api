@@ -287,7 +287,7 @@ export class BingoService {
             });
 
             if (!carton) {
-                throw new NotFoundException('Cartón no disponible');
+                throw new NotFoundException('Cartón ' + carton_id + ' no disponible, por favor seleccione otro cartón');
             }
 
             // Crear el ticket
@@ -484,7 +484,7 @@ export class BingoService {
                 data: {
                     event_id: eventId,
                     price: price.toString(),
-                    numbers: this.generateBingoNumbers(),
+                    numbers: this.generateCartonNumbers(),
                     status: ECartonStatus.AVAILABLE,
                 },
             });
@@ -673,9 +673,6 @@ export class BingoService {
             },
             include: {
                 cartons: {
-                    where: {
-                        status: ECartonStatus.SOLD,
-                    },
                     include: {
                         Ticket: {
                             where: {
@@ -692,6 +689,7 @@ export class BingoService {
                         },
                     },
                 },
+                gameBingo: true,
             },
         });
 
@@ -700,7 +698,7 @@ export class BingoService {
         }
 
         const winningCartons: BingoWinner[] = [];
-        const calledNumbers = new Set(event.numbers);
+        const calledNumbers = event.gameBingo.numbers_called;
 
         for (const carton of event.cartons) {
             // Verificar que el cartón tenga un ticket asociado
@@ -719,8 +717,19 @@ export class BingoService {
         return winningCartons;
     }
 
-    private isBingoWinner(cartonNumbers: number[], calledNumbers: Set<number>): boolean {
-        return cartonNumbers.every((number) => number === 0 || calledNumbers.has(number));
+    private isBingoWinner(cartonNumbers: number[], calledNumbers: number[]): boolean {
+        // Verificar que el cartón tenga exactamente 15 números
+        if (cartonNumbers.length !== 15) {
+            return false;
+        }
+
+        // Verificar que todos los números del cartón estén en los números llamados
+        const allNumbersCalled = cartonNumbers.every((number) => calledNumbers.includes(number));
+
+        // Verificar que no haya números inválidos (0 o mayores a 90)
+        const validNumbers = cartonNumbers.every((number) => number > 0 && number <= 90);
+
+        return allNumbersCalled && validNumbers;
     }
 
     async createGameBingo(eventId: string) {
@@ -871,31 +880,58 @@ export class BingoService {
             where: { id: gameId },
         });
 
-        return  {
+        let winners_cartons: { carton_id: number; user_id: string; first_name: string; last_name: string, email: string }[] = [];
+        
+        if (gameBingo.winners_cartons.length > 0) {
+            // Usar Promise.all con map en lugar de forEach
+            winners_cartons = await Promise.all(
+                gameBingo.winners_cartons.map(async (cartonId) => {
+                    const carton = await this.prisma.carton.findUnique({
+                        where: { id: cartonId },
+                        include: {
+                            Ticket: {
+                                include: {
+                                    user: true,
+                                },
+                            },
+                        },
+                    });
+
+                    return {
+                        carton_id: carton.id,
+                        user_id: carton.Ticket.user.id,
+                        first_name: carton.Ticket.user.first_name,
+                        last_name: carton.Ticket.user.last_name,
+                        email: carton.Ticket.user.email,
+                    };
+                })
+            );
+        }
+
+        return {
             numbers_called: gameBingo.numbers_called,
             status: gameBingo.status,
-        }
+            winners_cartons: winners_cartons,
+        };
     }
-
-  
 
     async getParticipantsEvent(eventId: string) {
         const users = await this.prisma.user.findMany({
-            where: { 
-                Tickets: { 
-                    some: { 
+            where: {
+                Tickets: {
+                    some: {
                         event_id: eventId,
                         status: ETicketStatus.SOLD,
-                        is_deleted: false
-                    } 
+                        is_deleted: false,
+                    },
                 },
-                is_deleted: false
+                is_deleted: false,
             },
             include: {
                 Tickets: {
-                  include: {
-                    carton: true,
-                  }
+                    include: {
+                        carton: true,
+                    },
                 },
             },
         });
