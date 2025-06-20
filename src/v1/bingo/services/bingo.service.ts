@@ -10,6 +10,7 @@ import {
 import { EBingoStatus, ECartonStatus, EGameStatus, ETicketStatus, Prisma } from '@prisma/client';
 import axios from 'axios';
 import { getAllJSDocTagsOfKind } from 'typescript';
+import { interval, Observable, switchMap } from 'rxjs';
 interface BingoWinner {
     cartonId: number;
     userId: string;
@@ -874,10 +875,62 @@ export class BingoService {
         });
         return gameBingo;
     }
-
+    getGameStream(gameId: string): Observable<any> {
+        return interval(5000).pipe(
+            switchMap(() => this.getNumberCalledGame(gameId))
+        );
+    }
     async getNumberCalledGame(gameId: string) {
         const gameBingo = await this.prisma.gameBingo.findUnique({
             where: { id: gameId },
+        });
+
+        let winners_cartons: { carton_id: number; user_id: string; first_name: string; last_name: string, email: string }[] = [];
+        
+        if (gameBingo.winners_cartons.length > 0) {
+            // Usar Promise.all con map en lugar de forEach
+            winners_cartons = await Promise.all(
+                gameBingo.winners_cartons.map(async (cartonId) => {
+                    const carton = await this.prisma.carton.findUnique({
+                        where: { id: cartonId },
+                        include: {
+                            Ticket: {
+                                include: {
+                                    user: true,
+                                },
+                            },
+                        },
+                    });
+
+                    return {
+                        carton_id: carton.id,
+                        user_id: carton.Ticket.user.id,
+                        first_name: carton.Ticket.user.first_name,
+                        last_name: carton.Ticket.user.last_name,
+                        email: carton.Ticket.user.email,
+                    };
+                })
+            );
+        }
+
+        return {
+            numbers_called: gameBingo.numbers_called,
+            status: gameBingo.status,
+            winners_cartons: winners_cartons,
+        };
+    }
+
+    async getNumberCalledGameSocket(eventId: string) {
+
+        const event = await this.prisma.bingoEvent.findUnique({
+            where: { id: eventId },
+            include: {
+                gameBingo: true,
+            },
+        });
+
+        const gameBingo = await this.prisma.gameBingo.findUnique({
+            where: { id: event.gameBingo.id },
         });
 
         let winners_cartons: { carton_id: number; user_id: string; first_name: string; last_name: string, email: string }[] = [];

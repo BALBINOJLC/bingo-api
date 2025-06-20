@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Patch, Req } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Patch, Req, Sse, MessageEvent } from '@nestjs/common';
 import { BingoService } from '../services/bingo.service';
 import {
     CreateBingoEventDto,
@@ -11,6 +11,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common';
 import { IRequestWithUser } from '@common';
 import { EGameStatus } from '@prisma/client';
+import { map, Observable } from 'rxjs';
 
 @ApiTags('BINGO')
 @Controller({
@@ -192,7 +193,15 @@ export class BingoController {
     }
 
 
- 
+    @Sse('game/bingo/stream/:gameId')
+    streamGameNumbers(@Param('gameId') gameId: string): Observable<MessageEvent> {
+        return this.bingoService.getGameStream(gameId).pipe(
+            map(data => ({
+                data: JSON.stringify(data),
+                type: 'message',
+            }))
+        );
+    }
 
     @Get('event/participants/bingo-event/:eventId')
     async getParticipantsEvent(@Param('eventId') eventId: string) {
