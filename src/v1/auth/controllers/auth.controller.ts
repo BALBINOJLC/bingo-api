@@ -20,7 +20,7 @@ export class AuthController {
     }
 
     @Post('signup')
-    async signup(@Body() body: RegisterUserDto, @Res() res: Response): Promise<Response | void> {
+    async signup(@Body() body: any, @Res() res: Response): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
             action: () => this._authService.registerUser(body),
             res,

@@ -1,16 +1,8 @@
 import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsStrongPassword } from 'class-validator';
 
 class PasswordDto {
-    @IsStrongPassword(
-        {
-            minLength: 8,
-            minLowercase: 1,
-            minUppercase: 1,
-            minNumbers: 1,
-            minSymbols: 1,
-        },
-        { message: 'AUTH.ERRORS.PASSWORD_NOT_STRONG' }
-    )
+    @IsString()
+    @IsNotEmpty()
     password: string;
 }
 
@@ -21,16 +13,7 @@ export class ChangePasswordDto {
 
     @IsNotEmpty()
     @IsString()
-    @IsStrongPassword(
-        {
-            minLength: 8,
-            minLowercase: 1,
-            minUppercase: 1,
-            minNumbers: 1,
-            minSymbols: 1,
-        },
-        { message: 'AUTH.ERRORS.PASSWORD_NOT_STRONG' }
-    )
+    @IsStrongPassword()
     newPassword: string;
 }
 
