@@ -46,9 +46,10 @@ export class BingoService {
                 cartons: true,
             },
         });
+        const randomMultiplier = Math.floor(Math.random() * 3) + 1;
 
         // Generamos cartones ganadores primero
-        const winningCartons = this.generateWinningCartons(eventNumbers, 2); // Generamos 2 cartones ganadores
+        const winningCartons = this.generateWinningCartons(eventNumbers, randomMultiplier); // Generamos 2 cartones ganadores
 
         // Creamos los cartones ganadores
         for (const winningNumbers of winningCartons) {

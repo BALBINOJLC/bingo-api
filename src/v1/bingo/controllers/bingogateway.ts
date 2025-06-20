@@ -4,7 +4,7 @@ import { BingoService } from '../services/bingo.service';
 
 @WebSocketGateway({
     cors: {
-        origin: ["http://localhost:3000", "http://127.0.0.1:3000", "https://bgapi.balbijlc.com"],
+        origin: ["http://localhost:3000", "http://127.0.0.1:3000", "https://bg-front-b4ev.vercel.app"],
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     }
