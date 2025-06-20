@@ -9,7 +9,7 @@ export class CommonAuthServise {
             const jwt = this.jwtService.sign(data);
 
             return {
-                expiresIn: 3600 * 60 * 60 * 24,
+                expiresIn: 3600 * 24 * 30, // 30 días en segundos (60*60*24*30)
                 token: jwt,
             };
         } catch (error) {

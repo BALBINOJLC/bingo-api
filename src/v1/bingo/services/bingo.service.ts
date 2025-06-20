@@ -456,24 +456,57 @@ export class BingoService {
         return tickets;
     }
 
-    async updatedStatusTicketsAndCartons(ticketId: string) {
-        const ticket = await this.prisma.ticket.update({
+    async updatedStatusTicketsAndCartons(ticketId: string, status: ETicketStatus) {
+        const ticketUnique = await this.prisma.ticket.findUnique({
             where: {
                 id: ticketId,
             },
-            data: {
-                status: ETicketStatus.SOLD,
-            },
         });
 
-        await this.prisma.carton.update({
-            where: {
-                id: ticket.carton_id,
-            },
-            data: {
-                status: ECartonStatus.SOLD,
-            },
-        });
+        if (status === ETicketStatus.AVAILABLE) {
+            await this.prisma.carton.update({
+                where: {
+                    id: ticketUnique.carton_id,
+                },
+                data: {
+                    status: ECartonStatus.AVAILABLE,
+                },
+            });
+
+            await this.prisma.ticket.delete({
+                where: {
+                    id: ticketId,
+                },
+            });
+
+            return { message: 'Ticket y cartón actualizados exitosamente' };
+        } else {
+            const ticket = await this.prisma.ticket.update({
+                where: {
+                    id: ticketId,
+                },
+                data: {
+                    status: status,
+                },
+            });
+
+            let statusCarton ;
+            if(status === ETicketStatus.PROCESSING_SOLD){
+                statusCarton = ECartonStatus.PROCESSING_SOLD;
+            } else {
+                statusCarton = ECartonStatus.SOLD;
+            }
+            await this.prisma.carton.update({
+                where: {
+                    id: ticket.carton_id,
+                },
+                data: {
+                    status: statusCarton,
+                },
+            });
+        }
+
+       
 
         return {
             message: 'Tickets y cartones actualizados exitosamente',
@@ -553,6 +586,29 @@ export class BingoService {
                 user_id: userId,
                 is_deleted: false,
                 event_id: eventId,
+            },
+            include: {
+                carton: {
+                    include: {
+                        event: true,
+                    },
+                },
+            },
+            orderBy: {
+                created_at: 'desc',
+            },
+        });
+
+        return tickets;
+    }
+
+    async getTicketsByUserIdEventLiveStream(userId: string, eventId: string) {
+        const tickets = await this.prisma.ticket.findMany({
+            where: {
+                user_id: userId,
+                is_deleted: false,
+                event_id: eventId,
+                status: ETicketStatus.SOLD,
             },
             include: {
                 carton: {
@@ -877,17 +933,15 @@ export class BingoService {
         return gameBingo;
     }
     getGameStream(gameId: string): Observable<any> {
-        return interval(5000).pipe(
-            switchMap(() => this.getNumberCalledGame(gameId))
-        );
+        return interval(5000).pipe(switchMap(() => this.getNumberCalledGame(gameId)));
     }
     async getNumberCalledGame(gameId: string) {
         const gameBingo = await this.prisma.gameBingo.findUnique({
             where: { id: gameId },
         });
 
-        let winners_cartons: { carton_id: number; user_id: string; first_name: string; last_name: string, email: string }[] = [];
-        
+        let winners_cartons: { carton_id: number; user_id: string; first_name: string; last_name: string; email: string }[] = [];
+
         if (gameBingo.winners_cartons.length > 0) {
             // Usar Promise.all con map en lugar de forEach
             winners_cartons = await Promise.all(
@@ -922,7 +976,6 @@ export class BingoService {
     }
 
     async getNumberCalledGameSocket(eventId: string) {
-
         const event = await this.prisma.bingoEvent.findUnique({
             where: { id: eventId },
             include: {
@@ -934,8 +987,8 @@ export class BingoService {
             where: { id: event.gameBingo.id },
         });
 
-        let winners_cartons: { carton_id: number; user_id: string; first_name: string; last_name: string, email: string }[] = [];
-        
+        let winners_cartons: { carton_id: number; user_id: string; first_name: string; last_name: string; email: string }[] = [];
+
         if (gameBingo.winners_cartons.length > 0) {
             // Usar Promise.all con map en lugar de forEach
             winners_cartons = await Promise.all(

@@ -10,7 +10,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@common';
 import { IRequestWithUser } from '@common';
-import { EGameStatus } from '@prisma/client';
+import { EGameStatus, ETicketStatus } from '@prisma/client';
 import { map, Observable } from 'rxjs';
 
 @ApiTags('BINGO')
@@ -106,6 +106,14 @@ export class BingoController {
         return this.bingoService.getTicketsByUserIdEvent(userId, eventId);
     }
 
+    @Get('tickets/user-cartons-live-stream/:userId/:eventId')
+    @ApiOperation({ summary: 'Obtener tickets comprados por el usuario' })
+    @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
+    async getUserTicketsByUserIdEventLiveStream(@Param('userId') userId: string, @Param('eventId') eventId: string) {
+        return this.bingoService.getTicketsByUserIdEventLiveStream(userId, eventId);
+    }
+
+
 
     @Get('events/:eventId/cartons/available')
     @ApiOperation({ summary: 'Obtener cartones disponibles de un evento' })
@@ -140,8 +148,8 @@ export class BingoController {
     @Patch('tickets-cartons/event/:ticketId')
     @ApiOperation({ summary: 'Obtener tickets de un evento' })
     @ApiResponse({ status: 200, description: 'Lista de tickets obtenida exitosamente' })
-    async updatedStatusTicketsAndCartons(@Param('ticketId') ticketId: string) {
-        return this.bingoService.updatedStatusTicketsAndCartons(ticketId);
+    async updatedStatusTicketsAndCartons(@Param('ticketId') ticketId: string, @Body() body: { status: ETicketStatus }) {
+        return this.bingoService.updatedStatusTicketsAndCartons(ticketId, body.status);
     }
 
     @Post('tickets/purchase/super_admin')
