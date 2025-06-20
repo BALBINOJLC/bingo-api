@@ -58,7 +58,7 @@ ENV NODE_ENV=staging
 USER node
 
 # Exponer el puerto en el que la app se ejecuta
-EXPOSE 3000
+EXPOSE 3025
 
 # Ajustar la ruta del archivo main.js
 CMD ["doppler", "run", "--", "node", "dist/src/main.js"]
