@@ -930,6 +930,10 @@ export class BingoService {
             where: { id: findGame.id },
             data: { status: EGameStatus.PAUSED, numbers_called: [], winners_cartons: [] },
         });
+        await this.prisma.bingoEvent.update({
+            where: { id: findGame.event_id },
+            data: { numbers: this.generateBingoNumbers() },
+        });
         return gameBingo;
     }
     getGameStream(gameId: string): Observable<any> {

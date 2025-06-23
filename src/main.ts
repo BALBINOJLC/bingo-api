@@ -23,7 +23,7 @@ async function bootstrap() {
     );
     app.setGlobalPrefix(envs.node.prefix);
     app.enableCors({
-        origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://bg-front-b4ev.vercel.app'],
+        origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://bg-front-b4ev.vercel.app', 'https://goldenbingo.balbijlc.com'],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization', 'notoken']
