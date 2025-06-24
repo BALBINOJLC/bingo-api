@@ -46,25 +46,9 @@ export class BingoService {
                 cartons: true,
             },
         });
-        const randomMultiplier = Math.floor(Math.random() * 3) + 1;
-
-        // Generamos cartones ganadores primero
-        const winningCartons = this.generateWinningCartons(eventNumbers, randomMultiplier); // Generamos 2 cartones ganadores
-
-        // Creamos los cartones ganadores
-        for (const winningNumbers of winningCartons) {
-            await this.prisma.carton.create({
-                data: {
-                    status: ECartonStatus.AVAILABLE,
-                    numbers: winningNumbers,
-                    event: { connect: { id: newEvent.id } },
-                    price: createBingoEventDto.price_cardboard.toString(),
-                },
-            });
-        }
 
         // Creamos el resto de los cartones
-        const remainingCartons = total_cartons - winningCartons.length;
+        const remainingCartons = total_cartons;
         for (let i = 0; i < remainingCartons; i++) {
             await this.prisma.carton.create({
                 data: {
