@@ -912,12 +912,13 @@ export class BingoService {
 
         const gameBingo = await this.prisma.gameBingo.update({
             where: { id: findGame.id },
-            data: { status: EGameStatus.PAUSED, numbers_called: [], winners_cartons: [] },
+            data: { status: EGameStatus.PAUSED, numbers_called: [], winners_cartons: [], numbers_event: this.generateBingoNumbers() },
         });
         await this.prisma.bingoEvent.update({
             where: { id: findGame.event_id },
             data: { numbers: this.generateBingoNumbers() },
         });
+
         return gameBingo;
     }
     getGameStream(gameId: string): Observable<any> {
